@@ -133,8 +133,8 @@ namespace SunsetCurse.Net
         public void ServerRegister(ulong clientId, string username)
         {
             if (!IsServer) return;
-            if (string.IsNullOrWhiteSpace(username)) username = "Player";
-            if (username.Length > 18) username = username.Substring(0, 18);
+            username = NetworkLobby.ClampUsername(username);   // byte-safe for FixedString32Bytes
+            if (username.Length == 0) username = "Player";
             var entry = new PlayerEntry { clientId = clientId, username = new FixedString32Bytes(username) };
             for (int i = 0; i < roster.Count; i++)
             {

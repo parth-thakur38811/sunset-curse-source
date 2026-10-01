@@ -89,7 +89,8 @@ namespace SunsetCurse.Player
             if (!IsOwner) return;
             string local = NetworkBootstrap.LocalUsername;
             if (string.IsNullOrWhiteSpace(local)) return;
-            if (local.Length > 18) local = local.Substring(0, 18);
+            local = NetworkLobby.ClampUsername(local);   // byte-safe: Hindi/emoji names can't overflow
+            if (local.Length == 0) return;
             var fixedName = new FixedString32Bytes(local);
             if (!netUsername.Value.Equals(fixedName)) netUsername.Value = fixedName;
         }

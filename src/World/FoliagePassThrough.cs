@@ -47,7 +47,7 @@ namespace SunsetCurse.World
 
         private void Scan()
         {
-            var colliders = FindObjectsByType<Collider>(FindObjectsSortMode.None);
+            var colliders = FindObjectsByType<Collider>();
             int opened = 0;
             foreach (var col in colliders)
             {

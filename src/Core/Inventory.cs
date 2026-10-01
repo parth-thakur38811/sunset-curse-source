@@ -577,8 +577,17 @@ namespace SunsetCurse.Core
             else                        DistractServerRpc(duration);
         }
 
+        // Upper bound for monster-effect durations requested by CLIENTS. Legit values are the
+        // torch's 10s and the stone's 15s; 30s leaves room for tuning while stopping a modded
+        // client from freezing the (host-authoritative) monster for the whole night.
+        private const float MaxClientMonsterEffectSeconds = 30f;
+
         [ServerRpc(RequireOwnership = false)]
-        private void DistractServerRpc(float duration) => DistractServer(duration);
+        private void DistractServerRpc(float duration)
+        {
+            if (!(duration > 0f)) return;   // also rejects NaN
+            DistractServer(Mathf.Min(duration, MaxClientMonsterEffectSeconds));
+        }
 
         private void DistractServer(float duration)
         {
@@ -747,7 +756,11 @@ namespace SunsetCurse.Core
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void InvestigateServerRpc(Vector3 worldPos, float duration) => InvestigateServer(worldPos, duration);
+        private void InvestigateServerRpc(Vector3 worldPos, float duration)
+        {
+            if (!(duration > 0f)) return;   // also rejects NaN
+            InvestigateServer(worldPos, Mathf.Min(duration, MaxClientMonsterEffectSeconds));
+        }
 
         private void InvestigateServer(Vector3 worldPos, float duration)
         {

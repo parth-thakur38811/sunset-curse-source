@@ -328,7 +328,7 @@ namespace SunsetCurse.Player
         /// networked PlayerInventory flags, so it's correct for remote players too.</summary>
         private bool HasStandingTeammate()
         {
-            foreach (var inv in FindObjectsByType<Core.PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in FindObjectsByType<Core.PlayerInventory>())
             {
                 if (inv == null || inv == playerInventory) continue;
                 if (inv.IsAlive && !inv.IsDowned) return true;
@@ -686,9 +686,9 @@ namespace SunsetCurse.Player
             // There can be MORE THAN ONE monster now (scent stalker + compound watcher) — the
             // respawn spot must be a safe distance from ALL of them, whichever one made the kill.
             var monsterPositions = new System.Collections.Generic.List<Vector3>();
-            foreach (var m in FindObjectsByType<SunsetCurse.AI.MonsterAI>(FindObjectsSortMode.None))
+            foreach (var m in FindObjectsByType<SunsetCurse.AI.MonsterAI>())
                 if (m != null) monsterPositions.Add(m.transform.position);
-            foreach (var m in FindObjectsByType<SunsetCurse.AI.CompoundWatcherAI>(FindObjectsSortMode.None))
+            foreach (var m in FindObjectsByType<SunsetCurse.AI.CompoundWatcherAI>())
                 if (m != null) monsterPositions.Add(m.transform.position);
 
             Vector3 origin = transform.position;

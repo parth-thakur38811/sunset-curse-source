@@ -139,7 +139,7 @@ namespace SunsetCurse.World
         {
             get
             {
-                if (ritualSite == null) ritualSite = FindFirstObjectByType<RitualSiteNet>();
+                if (ritualSite == null) ritualSite = FindAnyObjectByType<RitualSiteNet>();
                 return ritualSite != null && ritualSite.Completed;
             }
         }
@@ -340,21 +340,40 @@ namespace SunsetCurse.World
 
         public void RequestTransmit()
         {
-            if (!IsSpawned) { ServerTransmit(); return; }
+            if (!IsSpawned) { ServerTransmit(ulong.MaxValue); return; }   // offline: the local player
             TransmitServerRpc();
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void TransmitServerRpc() => ServerTransmit();
+        private void TransmitServerRpc(ServerRpcParams p = default) => ServerTransmit(p.Receive.SenderClientId);
 
-        private void ServerTransmit()
+        private void ServerTransmit(ulong sender)
         {
             // Server re-validates: the tower must be FIXED, but the ritual may come before OR
             // after the SOS — whichever objective finishes second triggers the rescue.
             if (netTransmitted.Value || !TowerFixed) return;
+            // ...and the SENDER must actually carry the krotkofal. KrotkofalRadio checks this on
+            // the client, but a modded client could skip that; the host re-checks the sender's
+            // replicated carry flag. (A request in the ~0.1s between pickup and replication is
+            // simply ignored — pressing R again works.)
+            if (!SenderHasKrotkofal(sender)) return;
             netTransmitted.Value = true;
             if (!IsSpawned) OnTransmittedChanged(false, true);
             if (RitualDone) StartCoroutine(VictoryAfterDelay());
+        }
+
+        /// <summary>SERVER: does this client's player really carry the krotkofal? Reads the
+        /// owner-written, replicated carry flag. <c>ulong.MaxValue</c> = offline (local player),
+        /// the same sentinel ServerUnlockGate uses.</summary>
+        private static bool SenderHasKrotkofal(ulong sender)
+        {
+            if (sender == ulong.MaxValue)
+                return PlayerInventory.Local != null && PlayerInventory.Local.HasRadioItem(RadioItemKind.Krotkofal);
+            var all = PlayerInventory.All;
+            for (int i = 0; i < all.Count; i++)
+                if (all[i] != null && all[i].OwnerClientId == sender)
+                    return all[i].HasRadioItem(RadioItemKind.Krotkofal);
+            return false;
         }
 
         /// <summary>Called SERVER-SIDE by RitualSiteNet the moment the ritual completes. If the

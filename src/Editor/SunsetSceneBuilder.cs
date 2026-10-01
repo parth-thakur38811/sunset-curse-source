@@ -176,7 +176,7 @@ namespace SunsetCurse.EditorTools
         [MenuItem("Tools/Sunset Curse/2. Create DoorSync Object")]
         public static void CreateDoorSync()
         {
-            if (Object.FindFirstObjectByType<DoorSync>() != null)
+            if (Object.FindAnyObjectByType<DoorSync>() != null)
             {
                 Debug.Log("[SunsetSceneBuilder] A DoorSync already exists in the scene — nothing to do.");
                 return;
@@ -330,7 +330,7 @@ namespace SunsetCurse.EditorTools
         [MenuItem("Tools/Sunset Curse/7. Create Compound Watcher Monster")]
         public static void CreateCompoundWatcher()
         {
-            var existing = Object.FindFirstObjectByType<SunsetCurse.AI.CompoundWatcherAI>(FindObjectsInactive.Include);
+            var existing = Object.FindAnyObjectByType<SunsetCurse.AI.CompoundWatcherAI>(FindObjectsInactive.Include);
             if (existing != null)
             {
                 // Upgrade path: re-running the tool retrofits newer pieces onto an already-built
@@ -444,7 +444,7 @@ namespace SunsetCurse.EditorTools
 
             // Copy the working config from the map's existing fence (prefab, segment length, yaw).
             SunsetCurse.World.FenceBorder source = null;
-            foreach (var f in Object.FindObjectsByType<SunsetCurse.World.FenceBorder>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var f in Object.FindObjectsByType<SunsetCurse.World.FenceBorder>(FindObjectsInactive.Include))
                 if (f != fence) { source = f; break; }
 
             if (source != null)
@@ -486,7 +486,7 @@ namespace SunsetCurse.EditorTools
                 if (gateDoorPrefab == null) { Debug.LogError("[SunsetSceneBuilder] No door prefab available."); return; }
             }
 
-            var existingGate = Object.FindFirstObjectByType<SunsetCurse.World.GoldenGate>(FindObjectsInactive.Include);
+            var existingGate = Object.FindAnyObjectByType<SunsetCurse.World.GoldenGate>(FindObjectsInactive.Include);
             if (existingGate != null)
             {
                 // If it's already wearing the requested prefab, re-seat BOTH the hinge AND the
@@ -589,7 +589,7 @@ namespace SunsetCurse.EditorTools
             //    (Selection-based guessing burned us: "TowerGate"/"TowerFence" also contain
             //    "Tower", so re-running item 10 right after a run — which auto-selects the gate —
             //    anchored the whole build to the gate's own position.)
-            var st = Object.FindFirstObjectByType<SunsetCurse.World.RadioTowerState>(FindObjectsInactive.Include);
+            var st = Object.FindAnyObjectByType<SunsetCurse.World.RadioTowerState>(FindObjectsInactive.Include);
             if (st != null && st.Tower != null) return st.Tower.gameObject;
 
             // 2) An explicitly selected scout tower (exact-name family only, never Gate/Fence).
@@ -612,7 +612,7 @@ namespace SunsetCurse.EditorTools
         [MenuItem("Tools/Sunset Curse/11. Snap ItemSpawner Spots To Surfaces")]
         public static void SnapSpawnSpots()
         {
-            var spawner = Object.FindFirstObjectByType<SunsetCurse.World.NightValuableSpawner>(FindObjectsInactive.Include);
+            var spawner = Object.FindAnyObjectByType<SunsetCurse.World.NightValuableSpawner>(FindObjectsInactive.Include);
             if (spawner == null)
             {
                 Debug.LogError("[SunsetSceneBuilder] No NightValuableSpawner (ItemSpawner) in the scene.");
@@ -670,7 +670,7 @@ namespace SunsetCurse.EditorTools
         {
             string[] softKeywords = { "grass", "foliage", "leaf", "branch", "bush", "fern", "flower", "ivy", "berry" };
             int added = 0;
-            foreach (var r in Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+            foreach (var r in Object.FindObjectsByType<MeshRenderer>())
             {
                 if (r.GetComponent<Collider>() != null) continue;
                 var mf = r.GetComponent<MeshFilter>();
@@ -737,7 +737,7 @@ namespace SunsetCurse.EditorTools
         {
             // 1) Remove the OLD child-based barriers (the wrongly-oriented ledges) scene-wide.
             var oldBarriers = new List<GameObject>();
-            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
                 if (t != null && t.name == BarrierName) oldBarriers.Add(t.gameObject);
             foreach (var go in oldBarriers) Undo.DestroyObjectImmediate(go);
 
@@ -748,7 +748,7 @@ namespace SunsetCurse.EditorTools
             Undo.RegisterCreatedObjectUndo(container, "Create fence barriers");
 
             int walls = 0, gates = 0;
-            foreach (var mf in Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None))
+            foreach (var mf in Object.FindObjectsByType<MeshFilter>())
             {
                 if (mf.sharedMesh == null) continue;
                 var rend = mf.GetComponent<MeshRenderer>();
@@ -770,7 +770,7 @@ namespace SunsetCurse.EditorTools
 
             // Belt-and-braces for the "prompt only at the top edge" bug: snap the golden gate's
             // interact BoxCollider back onto the door mesh it's supposed to cover.
-            var goldenGate = Object.FindFirstObjectByType<GoldenGate>(FindObjectsInactive.Include);
+            var goldenGate = Object.FindAnyObjectByType<GoldenGate>(FindObjectsInactive.Include);
             if (goldenGate != null && RefitDoorCollider(goldenGate))
                 Debug.Log("[SunsetSceneBuilder] TowerGate door collider re-fitted to the visible door.",
                           goldenGate);
@@ -857,7 +857,7 @@ namespace SunsetCurse.EditorTools
         [MenuItem("Tools/Sunset Curse/14. Setup Intro Cutscene")]
         public static void SetupIntroCutscene()
         {
-            var existing = Object.FindFirstObjectByType<SunsetCurse.UI.IntroCutscene>(FindObjectsInactive.Include);
+            var existing = Object.FindAnyObjectByType<SunsetCurse.UI.IntroCutscene>(FindObjectsInactive.Include);
             if (existing != null)
             {
                 Selection.activeGameObject = existing.gameObject;
@@ -1766,7 +1766,7 @@ namespace SunsetCurse.EditorTools
                           * (Mathf.Max(hb.extents.x, hb.extents.z) + 1.6f);
             doorstep.transform.position = new Vector3(front.x, GroundHeightAt(front) + 0.1f, front.z);
 
-            var spawner = Object.FindFirstObjectByType<DawnPotionSpawner>();
+            var spawner = Object.FindAnyObjectByType<DawnPotionSpawner>();
             if (spawner != null)
             {
                 var so = new SerializedObject(spawner);
@@ -2320,7 +2320,7 @@ namespace SunsetCurse.EditorTools
         public static void SetupRadioTowerEscape()
         {
             // ── The shared state object ──
-            var state = Object.FindFirstObjectByType<SunsetCurse.World.RadioTowerState>(FindObjectsInactive.Include);
+            var state = Object.FindAnyObjectByType<SunsetCurse.World.RadioTowerState>(FindObjectsInactive.Include);
             if (state == null)
             {
                 var go = new GameObject("RadioTowerEscape");
@@ -2351,7 +2351,7 @@ namespace SunsetCurse.EditorTools
             so.ApplyModifiedProperties();
 
             // ── The nightly item spawner, sharing the potion's hiding spots ──
-            var potionSpawner = Object.FindFirstObjectByType<SunsetCurse.World.NightValuableSpawner>(FindObjectsInactive.Include);
+            var potionSpawner = Object.FindAnyObjectByType<SunsetCurse.World.NightValuableSpawner>(FindObjectsInactive.Include);
             if (potionSpawner == null)
             {
                 Debug.LogError("[SunsetSceneBuilder] No NightValuableSpawner (ItemSpawner) in the scene — " +

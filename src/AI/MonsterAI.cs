@@ -1264,7 +1264,7 @@ namespace SunsetCurse.AI
         private void RefreshPlayers()
         {
             livePlayers.Clear();
-            foreach (var inv in FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in FindObjectsByType<PlayerInventory>())
             {
                 if (inv == null) continue;
                 livePlayers.Add(new PlayerTarget

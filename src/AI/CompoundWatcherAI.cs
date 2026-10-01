@@ -433,7 +433,7 @@ namespace SunsetCurse.AI
             {
                 rosterTimer = 2f;
                 players.Clear();
-                foreach (var inv in FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+                foreach (var inv in FindObjectsByType<PlayerInventory>())
                 {
                     if (inv == null) continue;
                     players.Add(new Listened

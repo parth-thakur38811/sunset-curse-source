@@ -673,7 +673,7 @@ namespace SunsetCurse.UI
             // Torch card — shows whether the night's flash has been used yet.
             var localTorch = Camera.main != null
                 ? Camera.main.GetComponentInParent<SunsetCurse.Player.Torch>()
-                : Object.FindFirstObjectByType<SunsetCurse.Player.Torch>();
+                : Object.FindAnyObjectByType<SunsetCurse.Player.Torch>();
             bool torchUsedTonight = localTorch != null && localTorch.UsedThisNight;
             toggleTorchBtn.interactable = hasTorch && !torchUsedTonight;
             var torchBtnLabel = toggleTorchBtn.GetComponentInChildren<TMP_Text>();
@@ -967,7 +967,7 @@ namespace SunsetCurse.UI
             // is the primary path.)
             var torch = Camera.main != null
                 ? Camera.main.GetComponentInParent<SunsetCurse.Player.Torch>()
-                : Object.FindFirstObjectByType<SunsetCurse.Player.Torch>();
+                : Object.FindAnyObjectByType<SunsetCurse.Player.Torch>();
             if (torch == null) { statusLabel.text = "No torch found on the local player."; return; }
             torch.TryFlash();
         }

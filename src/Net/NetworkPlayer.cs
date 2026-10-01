@@ -175,7 +175,7 @@ namespace SunsetCurse.Net
         // `CinemachineVirtualCamera` (both derive from the base and both expose Follow/LookAt).
         private void AssignSceneCameraToFollowMe()
         {
-            var cam = Object.FindFirstObjectByType<CinemachineVirtualCameraBase>();
+            var cam = Object.FindAnyObjectByType<CinemachineVirtualCameraBase>();
             if (cam != null)
             {
                 cam.Follow = cameraFollowTarget;

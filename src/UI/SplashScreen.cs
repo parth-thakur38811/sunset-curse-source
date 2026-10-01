@@ -47,7 +47,7 @@ namespace SunsetCurse.UI
             Build();
 
             if (menu == null) menu = GetComponent<MainMenuController>();
-            if (menu == null) menu = FindFirstObjectByType<MainMenuController>();
+            if (menu == null) menu = FindAnyObjectByType<MainMenuController>();
 
             if (sting != null && AudioManager.Instance != null)
                 AudioManager.Instance.PlaySfx2D(sting);

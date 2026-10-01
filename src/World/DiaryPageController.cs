@@ -343,7 +343,7 @@ namespace SunsetCurse.World
             popupBody.fontStyle = FontStyles.Italic;
             popupBody.lineSpacing = 12f;
             popupBody.overflowMode = TextOverflowModes.Overflow;
-            popupBody.enableWordWrapping = true;
+            popupBody.textWrappingMode = TextWrappingModes.Normal;   // (enableWordWrapping is deprecated)
             popupBody.raycastTarget = false;
 
             // ── Close hint ────────────────────────────────────────────────────

@@ -31,8 +31,7 @@ namespace SunsetCurse.Core
     {
         private void Awake()
         {
-            var surfaces = FindObjectsByType<NavMeshSurface>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var surfaces = FindObjectsByType<NavMeshSurface>(FindObjectsInactive.Include);
 
             if (surfaces.Length == 0)
             {
@@ -74,8 +73,7 @@ namespace SunsetCurse.Core
         /// out of the bake entirely.</summary>
         private static void PrepareDoorsAndPlayersForBake()
         {
-            foreach (var door in FindObjectsByType<SunsetCurse.World.Door>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var door in FindObjectsByType<SunsetCurse.World.Door>(FindObjectsInactive.Include))
             {
                 if (door.GetComponent<NavMeshModifier>() == null)
                 {
@@ -96,8 +94,7 @@ namespace SunsetCurse.Core
                 }
             }
 
-            foreach (var pi in FindObjectsByType<PlayerInventory>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var pi in FindObjectsByType<PlayerInventory>(FindObjectsInactive.Include))
             {
                 if (pi.GetComponent<NavMeshModifier>() == null)
                     pi.gameObject.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
@@ -112,7 +109,7 @@ namespace SunsetCurse.Core
         private static void AddObstacleBackstops()
         {
             int added = 0;
-            foreach (var mc in FindObjectsByType<MeshCollider>(FindObjectsSortMode.None))
+            foreach (var mc in FindObjectsByType<MeshCollider>())
             {
                 if (mc == null || !mc.enabled || mc.isTrigger) continue;
                 if (mc.sharedMesh == null || mc.sharedMesh.isReadable) continue;   // baked fine

@@ -67,7 +67,7 @@ namespace SunsetCurse.UI
             // Bind to OUR OWN player's stats (not FindFirstObjectByType, which could grab a
             // teammate's in multiplayer).
             if (stats == null)
-                stats = ownInv != null ? ownInv.GetComponent<PlayerStats>() : FindFirstObjectByType<PlayerStats>();
+                stats = ownInv != null ? ownInv.GetComponent<PlayerStats>() : FindAnyObjectByType<PlayerStats>();
 
             BuildUI();
 

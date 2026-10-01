@@ -58,14 +58,16 @@ namespace SunsetCurse.World
         }
 
         /// <summary>Persistent poller — builds barriers whenever the ACTIVE scene changes, no matter
-        /// how it was loaded (Unity SceneManager, NGO, additive, whatever). One int compare a frame.</summary>
+        /// how it was loaded (Unity SceneManager, NGO, additive, whatever). One handle compare a frame.</summary>
         private class Runner : MonoBehaviour
         {
-            private int lastSceneHandle;
+            // Unity 6.4 made Scene.handle a SceneHandle struct; its implicit int conversions are
+            // deprecated, so store and compare the struct itself. None = "no scene seen yet".
+            private SceneHandle lastSceneHandle = SceneHandle.None;
             private void Update()
             {
                 var s = SceneManager.GetActiveScene();
-                if (s.handle == lastSceneHandle) return;
+                if (s.handle.Equals(lastSceneHandle)) return;
                 lastSceneHandle = s.handle;
                 BuildForScene(s);
             }
@@ -85,7 +87,7 @@ namespace SunsetCurse.World
             // 2) Build fresh world-aligned walls. Only make the container if there's a fence to wall.
             GameObject container = null;
             int count = 0;
-            foreach (var mf in Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None))
+            foreach (var mf in Object.FindObjectsByType<MeshFilter>())
             {
                 if (mf == null || mf.sharedMesh == null) continue;
                 if (mf.gameObject.scene != scene) continue;                 // this scene only
@@ -117,7 +119,7 @@ namespace SunsetCurse.World
 
         private static void RemoveBaked(Scene scene)
         {
-            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
             {
                 if (t == null || t.gameObject.scene != scene) continue;
                 if (t.name == OldChildBarrier || t.name == BakedContainer)

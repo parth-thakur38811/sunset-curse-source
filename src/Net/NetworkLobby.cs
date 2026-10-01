@@ -70,12 +70,23 @@ namespace SunsetCurse.Net
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(this); return; }
+            if (Instance != null && Instance != this)
+            {
+                // A second copy of this manager is in the scene. Destroy(this) would rip a
+                // NetworkBehaviour off a NetworkObject, which Netcode doesn't support (it shifts
+                // the behaviour indices, so RPCs can land on the wrong component). Disable this
+                // copy instead and shout, so the duplicate gets deleted from the scene.
+                Debug.LogError($"[{GetType().Name}] Duplicate in the scene - only one is allowed. " +
+                               "This copy is disabled; delete it.", this);
+                enabled = false;
+                return;
+            }
             Instance = this;
         }
 
         public override void OnNetworkSpawn()
         {
+            if (Instance != this) return;   // disabled duplicate (see Awake) - stay inert
             gameStarted.OnValueChanged += HandleGameStartedChanged;
             players.OnListChanged += HandlePlayerListChanged;
 
@@ -122,19 +133,53 @@ namespace SunsetCurse.Net
         /// host who we are. Server adds to (or updates) the NetworkList, which auto-syncs.</summary>
         public void RegisterMyUsername(string username)
         {
-            if (string.IsNullOrWhiteSpace(username)) username = "Player";
-            username = username.Trim();
-            if (username.Length > 18) username = username.Substring(0, 18);
+            username = ClampUsername(username);
+            if (username.Length == 0) username = "Player";
             // Stash it in a scene-independent static so the local player's NameTag can publish it
             // onto the player object (which survives the menu→game scene load, unlike this lobby).
             NetworkBootstrap.LocalUsername = username;
             RegisterUsernameServerRpc(username);
         }
 
+        /// <summary>Max username length in CHARACTERS (matches the menu input field's limit).</summary>
+        public const int MaxUsernameChars = 18;
+
+        // FixedString32Bytes stores at most 29 UTF-8 BYTES (32 minus length + terminator).
+        private const int MaxUsernameBytes = 29;
+
+        /// <summary>
+        /// Makes a username safe to store in a <see cref="FixedString32Bytes"/>. That type holds 29
+        /// BYTES, not 29 characters — Hindi letters take 3 bytes each and emoji take 4, so an
+        /// 18-character name can be 54+ bytes. Unclamped, the editor throws an ArgumentException
+        /// (the player's name never registers) and builds silently cut it short or blank. This
+        /// trims to 18 characters AND 29 bytes, and never splits an emoji's surrogate pair.
+        /// Use it everywhere a username becomes a FixedString.
+        /// </summary>
+        public static string ClampUsername(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return string.Empty;
+            name = name.Trim();
+            if (name.Length > MaxUsernameChars) name = name.Substring(0, MaxUsernameChars);
+            // The character cap may have cut an emoji in half — drop a dangling high surrogate.
+            if (name.Length > 0 && char.IsHighSurrogate(name[name.Length - 1]))
+                name = name.Substring(0, name.Length - 1);
+            while (name.Length > 0 && System.Text.Encoding.UTF8.GetByteCount(name) > MaxUsernameBytes)
+            {
+                int cut = name.Length - 1;
+                if (cut > 0 && char.IsLowSurrogate(name[cut])) cut--;   // remove the WHOLE emoji pair
+                name = name.Substring(0, cut);
+            }
+            return name;
+        }
+
         [ServerRpc(RequireOwnership = false)]
         private void RegisterUsernameServerRpc(string username, ServerRpcParams rpcParams = default)
         {
             ulong clientId = rpcParams.Receive.SenderClientId;
+            // Re-clamp on the SERVER too: the string arrives from the client, so never trust its
+            // length — an oversized name would otherwise throw right here, on the host.
+            username = ClampUsername(username);
+            if (username.Length == 0) username = "Player";
             var entry = new PlayerEntry { clientId = clientId, username = new FixedString32Bytes(username) };
 
             // Mirror into the PERSISTENT roster so usernames survive into the gameplay scene
@@ -163,7 +208,19 @@ namespace SunsetCurse.Net
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void StartGameServerRpc() => StartGameInternal();
+        private void StartGameServerRpc(ServerRpcParams p = default)
+        {
+            // Only the HOST starts the match. The host takes the IsServer branch in StartGame()
+            // and never comes through here, and the START button is host-only — so a request
+            // arriving here from a client can only come from a modded build. Ignore it.
+            if (p.Receive.SenderClientId != Unity.Netcode.NetworkManager.ServerClientId)
+            {
+                Debug.LogWarning($"[NetworkLobby] Ignored start request from client " +
+                                 $"{p.Receive.SenderClientId} — only the host can start the game.");
+                return;
+            }
+            StartGameInternal();
+        }
 
         private void StartGameInternal()
         {

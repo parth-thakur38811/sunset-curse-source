@@ -65,7 +65,7 @@ namespace SunsetCurse.World
 
             var mine = new System.Collections.Generic.HashSet<Collider>(GetComponentsInChildren<Collider>(true));
             var list = new System.Collections.Generic.List<Collider>();
-            foreach (var col in Object.FindObjectsByType<Collider>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var col in Object.FindObjectsByType<Collider>(FindObjectsInactive.Include))
             {
                 if (col == null || mine.Contains(col)) continue;
                 if (col.GetComponentInParent<Door>() != null) continue;              // never another door

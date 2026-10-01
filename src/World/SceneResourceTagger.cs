@@ -73,7 +73,7 @@ namespace SunsetCurse.World
 
             // Iterate Colliders (every harvestable needs one for the raycast to hit anyway).
             // De-dup by GameObject in case an object has multiple colliders.
-            foreach (var col in FindObjectsByType<Collider>(FindObjectsSortMode.None))
+            foreach (var col in FindObjectsByType<Collider>())
             {
                 if (col == null) continue;
                 var go = col.gameObject;

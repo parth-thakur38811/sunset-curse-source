@@ -50,6 +50,14 @@ namespace SunsetCurse.World
         private bool originalsSaved;
         private bool rainActive;
 
+        private void Awake()
+        {
+            // Weather is a STATIC class — its values outlive the scene. Without this reset, a game
+            // that reached the Day-6 rain (or ended during a Downpour omen) handed IsRaining=true
+            // and noise ×0.5 to the NEXT game: dry-looking, but the monster heard you at half range.
+            Weather.Set(raining: false, noiseMultiplier: 1f);
+        }
+
         private void Start()
         {
             if (GameClock.Instance != null)

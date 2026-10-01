@@ -97,7 +97,7 @@ namespace SunsetCurse.World
             // Auto-find a directional light if none was assigned.
             if (sun == null)
             {
-                foreach (var l in FindObjectsByType<Light>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                foreach (var l in FindObjectsByType<Light>(FindObjectsInactive.Exclude))
                 {
                     if (l.type == LightType.Directional) { sun = l; break; }
                 }

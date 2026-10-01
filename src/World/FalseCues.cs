@@ -95,7 +95,7 @@ namespace SunsetCurse.World
             // Use PlayerInventory's networked IsAlive to find alive players. PlayerObject is on
             // the same GameObject.
             var alivePlayers = new List<Transform>();
-            foreach (var inv in FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in FindObjectsByType<PlayerInventory>())
             {
                 if (inv != null && inv.IsAlive) alivePlayers.Add(inv.transform);
             }

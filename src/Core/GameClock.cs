@@ -292,7 +292,20 @@ namespace SunsetCurse.Core
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void TriggerEscapeServerRpc() => TriggerEscapeLocal();
+        private void TriggerEscapeServerRpc(ServerRpcParams p = default)
+        {
+            // Victory is decided on the HOST (ritual completion / SOS transmission both call
+            // TriggerEscape server-side and take the IsServer branch above). A request arriving
+            // here from a client can only come from a modded build trying to skip to the win
+            // screen — ignore it.
+            if (p.Receive.SenderClientId != Unity.Netcode.NetworkManager.ServerClientId)
+            {
+                Debug.LogWarning($"[GameClock] Ignored escape request from client " +
+                                 $"{p.Receive.SenderClientId} — victory is decided by the host.");
+                return;
+            }
+            TriggerEscapeLocal();
+        }
 
         private void TriggerEscapeLocal()
         {

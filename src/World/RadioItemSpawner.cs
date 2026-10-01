@@ -72,7 +72,17 @@ namespace SunsetCurse.World
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(this); return; }
+            if (Instance != null && Instance != this)
+            {
+                // A second copy of this manager is in the scene. Destroy(this) would rip a
+                // NetworkBehaviour off a NetworkObject, which Netcode doesn't support (it shifts
+                // the behaviour indices, so RPCs can land on the wrong component). Disable this
+                // copy instead and shout, so the duplicate gets deleted from the scene.
+                Debug.LogError($"[{GetType().Name}] Duplicate in the scene - only one is allowed. " +
+                               "This copy is disabled; delete it.", this);
+                enabled = false;
+                return;
+            }
             Instance = this;
         }
 
@@ -84,6 +94,7 @@ namespace SunsetCurse.World
 
         public override void OnNetworkSpawn()
         {
+            if (Instance != this) return;   // disabled duplicate (see Awake) - stay inert
             netGeneration.OnValueChanged += HandleGenerationChanged;
             if (IsServer && GameClock.Instance != null)
             {
@@ -168,7 +179,7 @@ namespace SunsetCurse.World
                 if (RadioTowerState.Instance != null && RadioTowerState.Instance.KindAttachedOrDropped(k))
                     continue;
                 bool carried = false;
-                foreach (var inv in FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+                foreach (var inv in FindObjectsByType<PlayerInventory>())
                     if (inv != null && inv.HasRadioItem(k)) { carried = true; break; }
                 if (!carried) pool.Add(k);
             }

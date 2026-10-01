@@ -117,11 +117,18 @@ namespace SunsetCurse.UI
 
         private void Start()
         {
+            // Safety net: nothing networked should be running when the menu appears — every
+            // session (SP or MP) is over by the time we're back here. Catches any exit path that
+            // forgot to call Shutdown(), so the next Play/Host always starts clean.
+            if (NetworkManager.Singleton != null
+                && (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsClient))
+                NetworkManager.Singleton.Shutdown();
+
             EnsureEventSystem();
             BuildUI();
 
             // The splash will reveal us; if there isn't one, show immediately.
-            if (FindFirstObjectByType<SplashScreen>() == null) RevealMenu();
+            if (FindAnyObjectByType<SplashScreen>() == null) RevealMenu();
         }
 
         /// <summary>Fade the menu in and start the menu music. Safe to call more than once.</summary>
@@ -1123,7 +1130,7 @@ namespace SunsetCurse.UI
         /// <summary>UGUI buttons need an EventSystem. Create one wired for the new Input System.</summary>
         private void EnsureEventSystem()
         {
-            if (FindFirstObjectByType<EventSystem>() != null) return;
+            if (FindAnyObjectByType<EventSystem>() != null) return;
             var go = new GameObject("EventSystem", typeof(EventSystem));
             var module = go.AddComponent<InputSystemUIInputModule>();
             module.AssignDefaultActions();   // so clicks/navigation work without an actions asset

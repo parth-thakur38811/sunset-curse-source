@@ -97,7 +97,7 @@ namespace SunsetCurse.Core
 
         private void RefreshPlayerSubscriptions()
         {
-            foreach (var ps in FindObjectsByType<PlayerStats>(FindObjectsSortMode.None))
+            foreach (var ps in FindObjectsByType<PlayerStats>())
             {
                 if (ps == null || subscribed.Contains(ps)) continue;
                 ps.OnPlayerDied += HandleDeath;
@@ -167,7 +167,7 @@ namespace SunsetCurse.Core
         /// Used to gate GAME OVER in co-op so spectator mode can take the dead player.</summary>
         private static bool HasOtherAlivePlayers()
         {
-            foreach (var inv in FindObjectsByType<SunsetCurse.Core.PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in FindObjectsByType<SunsetCurse.Core.PlayerInventory>())
             {
                 if (inv == null || inv == SunsetCurse.Core.PlayerInventory.Local) continue;
                 if (inv.IsAlive) return true;
@@ -265,6 +265,14 @@ namespace SunsetCurse.Core
         private void Continue()
         {
             Time.timeScale = 1f;
+
+            // Shut NGO down so the next game starts fresh — mirrors PauseMenuController's exit.
+            // Without this the host keeps running into the menu: the next single-player game's
+            // SceneNetworkBootstrap sees "already running", skips StartHost, and no player
+            // spawns; a multiplayer re-host fails with "already running".
+            var nm = Unity.Netcode.NetworkManager.Singleton;
+            if (nm != null && (nm.IsServer || nm.IsClient)) nm.Shutdown();
+
             SceneManager.LoadScene(mainMenuScene);
         }
 
@@ -358,7 +366,7 @@ namespace SunsetCurse.Core
 
         private void EnsureEventSystem()
         {
-            if (FindFirstObjectByType<EventSystem>() != null) return;
+            if (FindAnyObjectByType<EventSystem>() != null) return;
             var go = new GameObject("EventSystem", typeof(EventSystem));
             var module = go.AddComponent<InputSystemUIInputModule>();
             module.AssignDefaultActions();

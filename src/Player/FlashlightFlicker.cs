@@ -40,7 +40,7 @@ namespace SunsetCurse.Player
 
         private void Start()
         {
-            var ai = FindFirstObjectByType<MonsterAI>();
+            var ai = FindAnyObjectByType<MonsterAI>();
             if (ai != null) monster = ai.transform;
             clock = GameClock.Instance;
             perlinSeed = Random.value * 1000f;

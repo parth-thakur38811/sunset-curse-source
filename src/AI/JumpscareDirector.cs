@@ -99,9 +99,9 @@ namespace SunsetCurse.AI
         [SerializeField] private float repeatDelayMax = 100f;
 
         [Header("Debugging")]
-        [Tooltip("Play mode: press this key to scare YOURSELF instantly — any time of day, works " +
-                 "in builds too, no waiting for the night timer. The fastest way to verify the " +
-                 "scare is visible. Set to None to disable for release.")]
+        [Tooltip("Play mode: press this key to scare YOURSELF instantly — any time of day, no " +
+                 "waiting for the night timer. Works in the Editor and DEVELOPMENT builds only; " +
+                 "release builds ignore it (Debug.isDebugBuild gate), so it can't ship as a cheat.")]
         [SerializeField] private Key debugScareKey = Key.F9;
 
         // Server-side scheduling.
@@ -145,7 +145,10 @@ namespace SunsetCurse.AI
             // Debug hotkey: instant local self-scare, day or night. The real scare fires 25–100s
             // into a night, which made every visibility fix cost a full playtest to check — this
             // turns each check into two seconds. Runs on any peer (the scare is local anyway).
-            if (debugScareKey != Key.None && Keyboard.current != null &&
+            // Debug.isDebugBuild = true in the Editor + Development builds, FALSE in release —
+            // so the key never ships. (Not an #if: conditionally-compiled serialized fields break
+            // Unity's build serialization layout.)
+            if (Debug.isDebugBuild && debugScareKey != Key.None && Keyboard.current != null &&
                 Keyboard.current[debugScareKey].wasPressedThisFrame)
                 SpawnScareLocal();
 
@@ -176,7 +179,7 @@ namespace SunsetCurse.AI
         private void RefillQueue()
         {
             pending.Clear();
-            foreach (var inv in FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in FindObjectsByType<PlayerInventory>())
                 if (inv != null && inv.IsAlive && !inv.IsDowned) pending.Add(inv.OwnerClientId);
             // Fisher–Yates shuffle.
             for (int i = pending.Count - 1; i > 0; i--)
@@ -188,7 +191,7 @@ namespace SunsetCurse.AI
 
         private bool IsClientAliveStanding(ulong clientId)
         {
-            foreach (var inv in FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in FindObjectsByType<PlayerInventory>())
                 if (inv != null && inv.OwnerClientId == clientId)
                     return inv.IsAlive && !inv.IsDowned;
             return false;

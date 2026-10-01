@@ -119,7 +119,7 @@ namespace SunsetCurse.Player
             // stats (replicated) instead of our own dead 0.
             if (SunsetCurse.UI.PlayerHUD.Local != null) SunsetCurse.UI.PlayerHUD.Local.SetSpectateTarget(target);
 
-            if (vcam == null) vcam = Object.FindFirstObjectByType<CinemachineVirtualCameraBase>();
+            if (vcam == null) vcam = Object.FindAnyObjectByType<CinemachineVirtualCameraBase>();
             if (vcam == null)
             {
                 Debug.LogWarning("[SpectatorMode] No CinemachineVirtualCamera found — can't switch view.", this);
@@ -145,7 +145,7 @@ namespace SunsetCurse.Player
         private List<PlayerInventory> FindAliveOthers()
         {
             var result = new List<PlayerInventory>();
-            foreach (var inv in Object.FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in Object.FindObjectsByType<PlayerInventory>())
             {
                 if (inv == null) continue;
                 if (inv == PlayerInventory.Local) continue;
@@ -237,7 +237,7 @@ namespace SunsetCurse.Player
             foreach (var s in stale) playerButtons.Remove(s);
 
             // Add buttons for all currently alive others (and refresh labels).
-            foreach (var inv in Object.FindObjectsByType<PlayerInventory>(FindObjectsSortMode.None))
+            foreach (var inv in Object.FindObjectsByType<PlayerInventory>())
             {
                 if (inv == null || inv == PlayerInventory.Local) continue;
                 if (!playerButtons.TryGetValue(inv, out var btn))

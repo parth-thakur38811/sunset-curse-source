@@ -120,7 +120,7 @@ namespace SunsetCurse.Player
             var cam = Camera.main;
             if (cam == null) return false;
 
-            foreach (var m in FindObjectsByType<MonsterAI>(FindObjectsSortMode.None))
+            foreach (var m in FindObjectsByType<MonsterAI>())
             {
                 if (m == null) continue;
                 // Use a chest-height anchor — easier to "see" than the feet, less head-popping.

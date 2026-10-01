@@ -342,7 +342,7 @@ namespace SunsetCurse.UI
 
         private void EnsureEventSystem()
         {
-            if (FindFirstObjectByType<EventSystem>() != null) return;
+            if (FindAnyObjectByType<EventSystem>() != null) return;
             var go = new GameObject("EventSystem", typeof(EventSystem));
             var module = go.AddComponent<InputSystemUIInputModule>();
             module.AssignDefaultActions();
