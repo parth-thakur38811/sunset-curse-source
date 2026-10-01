@@ -1,0 +1,15 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# Raw media working files (export finished PNG/JPG/MP4 into media/ instead)
+*.psd
+*.aep
+*.prproj
