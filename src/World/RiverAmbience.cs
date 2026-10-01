@@ -18,6 +18,10 @@ namespace SunsetCurse.World
     /// Every clip/source below is an OPTIONAL placeholder — leave them empty until you have
     /// audio; all paths are null-guarded.
     ///
+    /// Related water audio living elsewhere: the ENTRY SPLASH + WADING STEPS are on the player's
+    /// FootstepAudio (they must be heard by teammates, 3D), and the river's own flowing-water loop
+    /// follows the listener along the bank (RiverFlowController ▸ Flow Audio).
+    ///
     /// SETUP: lives on the "RiverBucket" GameObject (Tools ▸ Sunset Curse ▸ 24).
     /// </summary>
     public class RiverAmbience : MonoBehaviour

@@ -26,6 +26,9 @@ namespace SunsetCurse.World
         [Tooltip("Rain starts at the beginning of THIS day and never stops.")]
         [SerializeField] private int rainStartDay = 6;
 
+        // NOTE (2026-10-01): DayNightLighting rewrites fog/ambient EVERY frame, so these one-shot
+        // values only show for a frame. The visible rain look (heavier fog, dimmer light) now lives
+        // in DayNightLighting ▸ Rain, which reacts to Weather.IsRaining — tune it there.
         [Header("Visuals")]
         [Tooltip("How thick the fog gets in rain. 0.04 is heavy and oppressive.")]
         [SerializeField] private float rainFogDensity = 0.04f;

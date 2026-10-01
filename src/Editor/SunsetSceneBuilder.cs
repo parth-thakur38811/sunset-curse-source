@@ -1518,27 +1518,37 @@ namespace SunsetCurse.EditorTools
                 // River tuning: shallow murky forest water, small waves aligned downstream (world
                 // XZ ≈ (0.7, 0.7)), foam kicking in on crests and wherever geometry intersects
                 // (rocks, banks, the bridge posts) via scene depth.
-                // OPACITY (session 23 fix — "river too transparent"): the shader's alpha is
-                // baseAlpha(_BaseColor.a→_DeepColor.a by depth) + depth boost, × _Opacity, floored
-                // at _MinAlpha near intersections. In a 0.45m-deep river the old values (a 0.65/0.80,
-                // MinAlpha 0.18, Refraction 0.65) let the bed show straight through. Now: near-solid
-                // murky body (alpha ≈ 1 mid-river), a thin translucent rim only at the banks, and
-                // high refraction-to-water + absorption so the refracted bed reads as dark murk.
-                mat.SetColor("_BaseColor", new Color(0.08f, 0.32f, 0.34f, 0.92f));
-                mat.SetColor("_DeepColor", new Color(0.03f, 0.12f, 0.14f, 0.98f));
+                // OPACITY + LOOK (session 25 — "too transparent and unappealing"): the shader is now
+                // LIT (sun/moon, shadows, every flashlight), so the colours below are ALBEDO, not
+                // final pixels. Dark murky "cursed" water: alpha 1 mid-river, refraction almost fully
+                // replaced by the murk (the grass bed no longer shows through), a thin translucent
+                // rim only at the banks. Session 23's values (teal 0.32 albedo, alpha 0.92,
+                // refraction 0.9) still let the bed through and glowed at night (unlit shader).
+                mat.SetColor("_BaseColor", new Color(0.045f, 0.085f, 0.075f, 1f));
+                mat.SetColor("_DeepColor", new Color(0.015f, 0.035f, 0.035f, 1f));
                 mat.SetFloat("_DepthMax", 1.4f);
                 mat.SetFloat("_Opacity", 1f);
-                mat.SetFloat("_MinAlpha", 0.55f);
+                mat.SetFloat("_MinAlpha", 0.7f);
                 mat.SetFloat("_DepthAlphaBoost", 0.6f);
-                mat.SetFloat("_RefractionStrength", 0.9f);
+                mat.SetFloat("_RefractionStrength", 0.97f);
                 mat.SetFloat("_Absorption", 1.6f);
-                // Tame the Fresnel HARD: at player eye height the whole surface is seen at a
-                // grazing angle, where the default reflection tint (0.45 strength, scale 1)
-                // blends ~100% whitish-blue over everything — the "plain white plane in Play
-                // mode" symptom. Keep just a whisper of sheen.
-                mat.SetColor("_ReflectionColor", new Color(0.60f, 0.85f, 1.00f, 0.15f));
-                mat.SetFloat("_FresnelScale", 0.35f);
-                mat.SetFloat("_FresnelBias", 0.05f);
+                mat.SetFloat("_EdgeFade", 0.25f);
+                // Reflection is now the REAL sky (environment cubemap, auto-dimmed at night by the
+                // shader) instead of a constant white-blue tint — the constant tint is what turned
+                // the whole river into a "plain white plane" at grazing angles, which is why the old
+                // tuning had to choke it to 0.15. Near-physical water Fresnel, moderate strength.
+                mat.SetColor("_ReflectionColor", new Color(0.75f, 0.82f, 0.88f, 1f));
+                mat.SetFloat("_SkyReflection", 0.6f);
+                mat.SetFloat("_ReflectionRoughness", 0.12f);
+                mat.SetFloat("_FresnelPower", 5f);
+                mat.SetFloat("_FresnelScale", 0.7f);
+                mat.SetFloat("_FresnelBias", 0.02f);
+                // Glints from the real lights: sun by day, the moon at night, flashlights always.
+                mat.SetColor("_SpecularColor", new Color(1f, 1f, 1f, 0.6f));
+                mat.SetFloat("_Shininess", 220f);
+                mat.SetFloat("_SunSpecular", 2.5f);
+                mat.SetFloat("_AddLightSpecular", 2f);
+                mat.SetFloat("_BodyLighting", 0.5f);
                 mat.SetFloat("_RippleScale", 5f);
                 mat.SetFloat("_RippleSpeed", 1.1f);
                 // CREST FOAM FLOOD (the "always white no matter what we tune" bug): the shader's
@@ -1547,7 +1557,9 @@ namespace SunsetCurse.EditorTools
                 // n.y enough to fire it across the WHOLE surface. Keep normals gentle and the
                 // crest term quiet; shore/edge foam (depth-based, at rocks/banks) stays.
                 mat.SetFloat("_RippleStrength", 0.35f);
-                mat.SetFloat("_FoamIntensity", 0.8f);
+                mat.SetFloat("_FoamIntensity", 0.6f);
+                mat.SetFloat("_EdgeFoamIntensity", 0.8f);
+                mat.SetColor("_FoamColor", new Color(0.75f, 0.78f, 0.74f, 1f));   // dirty grey, lit by the scene
                 mat.SetFloat("_FoamCrestThreshold", 0.55f);
                 mat.SetFloat("_FoamCrestIntensity", 0.25f);
                 // MUST be well under WaterDepth (0.45): shore foam appears where the water is

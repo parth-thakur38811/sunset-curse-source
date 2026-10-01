@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SunsetCurse.Audio;
+using SunsetCurse.Core;
 
 namespace SunsetCurse.World
 {
@@ -42,6 +43,15 @@ namespace SunsetCurse.World
         [SerializeField] private int lengthSegments = 90;
         [SerializeField] private int widthSegments = 16;   // the widened lagoon needs cross-resolution too
 
+        [Header("Flow audio (the looping water AudioSource on this object)")]
+        [Tooltip("ON = the water loop slides along the river to the point NEAREST the listener every " +
+                 "frame, so the whole ~95m river is audible along its length (a single point source at " +
+                 "the centre went silent toward both ends). OFF = plain fixed source.")]
+        [SerializeField] private bool flowAudioFollowsListener = true;
+        [Tooltip("Volume multiplier while the listener is standing IN the water — the river is all " +
+                 "around you, so it should be louder than from the bank.")]
+        [SerializeField] private float inWaterVolumeBoost = 1.4f;
+
         /// <summary>World-space current velocity (direction × speed).</summary>
         public Vector3 Current { get; private set; }
 
@@ -57,6 +67,8 @@ namespace SunsetCurse.World
         private float worldPerLocalX = 1f, worldPerLocalZ = 1f;
         private Transform tr;
         private readonly Dictionary<Collider, RiverBuoyancy> touching = new Dictionary<Collider, RiverBuoyancy>();
+        private AudioSource flowAudio;      // the (possibly moved) water loop
+        private float flowBaseVolume;
 
         private void Awake()
         {
@@ -72,6 +84,60 @@ namespace SunsetCurse.World
             var src = GetComponent<AudioSource>();
             if (src != null && AudioManager.Instance != null && AudioManager.Instance.SfxGroup != null)
                 src.outputAudioMixerGroup = AudioManager.Instance.SfxGroup;
+            SetupFlowAudio(src);
+        }
+
+        // The loop lives on the river object itself, and moving IT would move the river — so the
+        // settings are copied onto a child "emitter" we can slide around, and the original is muted.
+        private void SetupFlowAudio(AudioSource src)
+        {
+            flowAudio = src;
+            if (src == null) return;
+            flowBaseVolume = src.volume;
+            if (!flowAudioFollowsListener) return;
+
+            var go = new GameObject("RiverFlowAudio");
+            go.transform.SetParent(tr, false);
+            var a = go.AddComponent<AudioSource>();
+            a.clip = src.clip;
+            a.outputAudioMixerGroup = src.outputAudioMixerGroup;
+            a.volume = src.volume;
+            a.pitch = src.pitch;
+            a.loop = true;
+            a.spatialBlend = src.spatialBlend;
+            a.rolloffMode = src.rolloffMode;
+            a.minDistance = src.minDistance;
+            a.maxDistance = src.maxDistance;
+            a.dopplerLevel = 0f;   // the emitter jumps along the bank as you move — no pitch wobble
+            a.priority = src.priority;
+
+            src.Stop();
+            src.enabled = false;
+            flowAudio = a;
+            if (a.clip != null) a.Play();
+        }
+
+        /// <summary>Closest point on the water surface's footprint to <paramref name="worldPos"/>.</summary>
+        public Vector3 ClosestPointOnWater(Vector3 worldPos)
+        {
+            Vector3 lp = tr.InverseTransformPoint(worldPos);
+            lp.x = Mathf.Clamp(lp.x, -5f, 5f);
+            lp.z = Mathf.Clamp(lp.z, -5f, 5f);
+            lp.y = 0f;
+            return tr.TransformPoint(lp);
+        }
+
+        private void LateUpdate()
+        {
+            if (!flowAudioFollowsListener || flowAudio == null || flowAudio.transform == tr) return;
+            var cam = Camera.main;   // the local player's view (spectators included)
+            if (cam == null) return;
+            Vector3 ears = cam.transform.position;
+            flowAudio.transform.position = ClosestPointOnWater(ears);
+            // Wading? Judge by the local player's FEET (camera fallback for spectators).
+            Vector3 feet = PlayerInventory.Local != null ? PlayerInventory.Local.transform.position
+                                                         : ears - Vector3.up * 2f;
+            flowAudio.volume = flowBaseVolume * (IsInWater(feet) ? inWaterVolumeBoost : 1f);
         }
 
         private void OnDestroy()

@@ -1,6 +1,7 @@
 using UnityEngine;
 using StarterAssets;
 using SunsetCurse.Audio;
+using SunsetCurse.World;
 
 namespace SunsetCurse.Player
 {
@@ -52,12 +53,25 @@ namespace SunsetCurse.Player
         [Range(0f, 1f)] [SerializeField] private float jumpVolume = 0.8f;
         [Range(0f, 1f)] [SerializeField] private float landVolume = 0.7f;
 
+        [Header("River wading (runs on EVERY player — teammates hear you splash, 3D)")]
+        [Tooltip("Sloshy wading steps used INSTEAD of the walk/run sets while this player is in the " +
+                 "river. Leave empty to keep the normal footsteps in water.")]
+        [SerializeField] private AudioClip[] waterStepClips;
+        [Range(0f, 1f)] [SerializeField] private float waterStepVolume = 0.8f;
+        [Tooltip("Wading is slower than walking on grass — step interval multiplier in the water.")]
+        [SerializeField] private float waterStepIntervalMultiplier = 1.25f;
+        [Tooltip("Splash the moment this player steps or jumps INTO the river (also replaces the land " +
+                 "sound when landing in water). Random pick.")]
+        [SerializeField] private AudioClip[] waterSplashClips;
+        [Range(0f, 1f)] [SerializeField] private float waterSplashVolume = 0.9f;
+
         private CharacterController controller;
         private FirstPersonController fpc;
         private float stepTimer;
         private bool wasGrounded = true;
         private Vector3 lastPosition;
         private bool positionCaptured;
+        private bool wasInWater;
 
         private void Start()
         {
@@ -84,6 +98,13 @@ namespace SunsetCurse.Player
             bool moving = horizontalSpeed > moveThreshold;
             bool running = horizontalSpeed > runThreshold;
 
+            // In the river? Works for remote players too (pure position test, no networking).
+            var river = RiverFlowController.Instance;
+            bool inWater = river != null && river.IsInWater(transform.position);
+            if (inWater && !wasInWater) PlayRandom(waterSplashClips, waterSplashVolume);
+            wasInWater = inWater;
+            bool wading = inWater && waterStepClips != null && waterStepClips.Length > 0;
+
             // Jump / land — only the local owner has an enabled FPS controller (the script is in
             // the NetworkPlayer's owner-only list). On remote instances fpc.enabled is false and
             // we skip this block; footsteps still play, jump/land just doesn't.
@@ -93,7 +114,14 @@ namespace SunsetCurse.Player
                 Vector3 v = controller != null ? controller.velocity : Vector3.zero;
 
                 if (wasGrounded && !grounded && v.y > 1f) PlayAtMe(jumpClip, jumpVolume);
-                if (!wasGrounded && grounded) { PlayAtMe(landClip, landVolume); stepTimer = 0f; }
+                if (!wasGrounded && grounded)
+                {
+                    if (inWater && waterSplashClips != null && waterSplashClips.Length > 0)
+                        PlayRandom(waterSplashClips, waterSplashVolume);
+                    else
+                        PlayAtMe(landClip, landVolume);
+                    stepTimer = 0f;
+                }
                 wasGrounded = grounded;
             }
 
@@ -103,9 +131,11 @@ namespace SunsetCurse.Player
                 stepTimer -= Time.deltaTime;
                 if (stepTimer <= 0f)
                 {
-                    if (running) PlayRandom(runClips, runVolume);
-                    else         PlayRandom(walkClips, walkVolume);
-                    stepTimer = running ? runStepInterval : walkStepInterval;
+                    if (wading)       PlayRandom(waterStepClips, waterStepVolume * (running ? 1f : 0.8f));
+                    else if (running) PlayRandom(runClips, runVolume);
+                    else              PlayRandom(walkClips, walkVolume);
+                    stepTimer = (running ? runStepInterval : walkStepInterval)
+                              * (wading ? waterStepIntervalMultiplier : 1f);
                 }
             }
             else
