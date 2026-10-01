@@ -7,7 +7,7 @@ a little less, and on day seven night becomes permanent.
 
 **Scale:** 105 C# scripts · ~24,600 lines · single Unity 6 project
 
-> *Role: Solo developer - ALL work inside the Unity Engine was done by me while ALL code was written by Claude code.*
+> *Role: Solo developer - Coded with assistance of Claude code.
 
 > **This repository contains the source code only.** The full Unity project also includes licensed
 > Unity Asset Store art, audio and animation packs, which are excluded here for licensing and size
