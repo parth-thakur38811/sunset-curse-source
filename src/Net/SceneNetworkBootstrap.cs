@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using SunsetCurse.Core;
 
@@ -35,7 +36,18 @@ namespace SunsetCurse.Net
             {
                 Debug.Log("[SceneNetworkBootstrap] Single-player: starting local NGO host so the " +
                           "player prefab spawns. (No Relay, no networking — just the host code path.)");
-                NetworkManager.Singleton.StartHost();
+
+                // Nobody ever connects to a single-player host, so it doesn't need the fixed port
+                // 7777. Port 0 = "any free port" (the OS picks one). With 7777, ANY other program
+                // holding it — a build running alongside the editor, or a socket the editor leaked
+                // after a mid-Play script reload — made StartHost fail: no player, nothing works.
+                // SetConnectionData also clears stale Relay settings left by an earlier MP session.
+                if (NetworkManager.Singleton.NetworkConfig.NetworkTransport is UnityTransport utp)
+                    utp.SetConnectionData("127.0.0.1", 0);
+
+                if (!NetworkManager.Singleton.StartHost())
+                    Debug.LogError("[SceneNetworkBootstrap] StartHost FAILED — no player will spawn. " +
+                                   "See the transport error above; restarting Unity frees a stuck socket.", this);
             }
         }
     }

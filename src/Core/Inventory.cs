@@ -465,7 +465,10 @@ namespace SunsetCurse.Core
 
         private void ConsumeNodeLocal(int nodeId)
         {
-            netConsumedNodes.Add(nodeId);   // offline: still goes into the list (and fires OnListChanged)
+            // Offline: still record it (IsNodeConsumed reads this list) — but OnListChanged is only
+            // subscribed in OnNetworkSpawn, which never ran, so despawn the node directly here.
+            netConsumedNodes.Add(nodeId);
+            SunsetCurse.World.ResourceNode.DespawnLocalById(nodeId);
         }
 
         [ClientRpc]

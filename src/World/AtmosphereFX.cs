@@ -81,7 +81,6 @@ namespace SunsetCurse.World
                 var rot = mist.rotationOverLifetime;
                 rot.enabled = true;
                 rot.z = new ParticleSystem.MinMaxCurve(-0.08f, 0.08f);   // slow swirl (radians/s)
-                mistBuf = new ParticleSystem.Particle[mistParticles];
             }
 
             if (dustMaterial != null)
@@ -95,7 +94,6 @@ namespace SunsetCurse.World
                 noise.frequency = 0.25f;
                 noise.scrollSpeed = 0.1f;
                 noise.quality = ParticleSystemNoiseQuality.Medium;
-                dustBuf = new ParticleSystem.Particle[dustParticles];
             }
         }
 
@@ -181,14 +179,14 @@ namespace SunsetCurse.World
                         * Mathf.Lerp(1f, rainMistBoost, rain01)
                         * Mathf.Lerp(1f, indoorMistFactor, indoor01);
                 SetMatColor(mistMat, mistColor, a);
-                Recycle(mist, mistBuf, new Vector3(eye.x, groundY, eye.z), mistRadius, flat: true);
+                Recycle(mist, ref mistBuf, new Vector3(eye.x, groundY, eye.z), mistRadius, flat: true);
             }
 
             if (dust != null)
             {
                 dust.transform.position = eye;
                 SetMatColor(dustMat, dustColor, Mathf.Lerp(dayDustAlpha, nightDustAlpha, dark));
-                Recycle(dust, dustBuf, eye, dustRadius, flat: false);
+                Recycle(dust, ref dustBuf, eye, dustRadius, flat: false);
             }
         }
 
@@ -207,8 +205,14 @@ namespace SunsetCurse.World
         // Keep the field centred on the camera: new particles spawn around it, and any particle the
         // player has walked away from is moved to the OPPOSITE side (ahead of you) with a fresh life
         // — so it fades back in there instead of popping. Density stays constant even at a sprint.
-        private void Recycle(ParticleSystem ps, ParticleSystem.Particle[] buf, Vector3 center, float radius, bool flat)
+        private void Recycle(ParticleSystem ps, ref ParticleSystem.Particle[] buf, Vector3 center, float radius, bool flat)
         {
+            // The buffer is (re)made here, not in Start: a script recompile DURING Play wipes it
+            // (Unity can't keep Particle[] across the reload, and Start never runs again) — the old
+            // version then threw ArgumentNullException every frame.
+            int max = ps.main.maxParticles;
+            if (buf == null || buf.Length < max) buf = new ParticleSystem.Particle[max];
+
             int n = ps.GetParticles(buf);
             bool changed = false;
             for (int i = 0; i < n; i++)
