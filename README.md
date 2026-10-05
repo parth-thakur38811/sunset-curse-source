@@ -2,17 +2,17 @@
 
 A four-player co-op horror survival game built in Unity 6. A traveller's car breaks down beside a
 cursed forest settlement, and the locals reveal he can never leave — unless the group gathers
-enough valuables to break the curse. Players have **seven in-game days** (shorter 2- and 4-night
+enough valuables to break the *curse*. Players have **seven in-game days** (shorter 2- and 4-night
 runs can be chosen from the menu). Each night the sun sets a little less, and on the last day night
 becomes permanent.
 
 **Scale:** 108 C# scripts · ~25,400 lines · single Unity 6 project
 
-> **Role:** Solo developer — coded with the assistance of Claude Code.
+> **Role:** Solo developer — coded with Claude Code.
 
 > **This repository contains the game's source code only.** The full Unity project also includes
 > licensed Unity Asset Store and Sketchfab art, audio and animation, which are excluded here for
-> licensing and size reasons. Every file in `src/` was written for this project.
+> licensing and size reasons. Every file in `src/` was written for this project using Claude Code.
 
 ---
 
@@ -28,13 +28,12 @@ becomes permanent.
 
 ## Gameplay
 
-- **Day** — forage berries to hold back hunger, gather wood/stone/herbs, craft tools, read the
-  lore pages, and plan the night's raid.
+- **Day** — forage berries to hold back hunger, gather wood/stone/herbs, craft tools, and plan the night's raid.
 - **Night** — the monsters leave their ground. Raid the fortified compound for one hidden Ritual
   Potion per night, and scavenge the parts needed to repair a derelict radio tower.
 - **Escape** — two objectives, both required, completable in either order: perform the altar
   **ritual** (a hold-the-line channel that broadcasts noise and draws every monster to you), and
-  repair the tower to transmit an **SOS** that calls in a rescue helicopter.
+  repair the radio tower to transmit an **SOS** that calls in a rescue helicopter.
 - **Pressure** — the safe daylight window shrinks every day (30 seconds less each day); miss the
   deadline and night is permanent.
 
@@ -101,38 +100,18 @@ watcher** hunts by sound alone inside its own zone. Plus a jumpscare director an
 system that plays red-herring growls, so audio can never be fully trusted.
 
 **Crafting & items** — a rebuildable crafting bench with drag-and-drop inventory: torch (blinds and
-distracts), stun syrup, throwable stone distractor, respawn potion, and a river-water bucket used as
+distracts), lord's potion (disables monsters for 30 seconds), throwable stone distractor, respawn potion, and a river-water bucket used as
 a ritual offering.
 
 **World systems** — procedural forest scatter, day/night lighting with shrinking daylight, weather
 that muffles noise in *both* directions, a nightly random **omen** system (blood moon, watched safe
-house, downpour, restless dead), synced doors, a safe house that monsters cannot enter, and a
+house, downpour, restless dead - each having its own features), synced doors, a safe house that monsters cannot enter, and a
 procedural river with real current, buoyancy, and Perlin-displaced water.
 
 **Presentation** — animated splash and menu, intro cutscene, difficulty and night-count selection,
 a moonlit night with its own colour grade (stained red under the blood-moon omen), ground mist and
 dust that only show where light falls, death/victory cinematics, world-space nameplates, proximity
 heartbeat/scream stings, and positional footstep audio.
-
----
-
-## Engineering Highlights
-
-- **Deterministic-by-seed world sync** — replaced per-object position replication with one shared
-  integer, eliminating an entire class of desync bugs and the bandwidth that came with it.
-- **Layered AI senses** — a sprint has to be earned through sight cones, line-of-sight raycasts and
-  a player-noise model; between sightings the monster only closes in at a walk, so breaking line of
-  sight and going quiet genuinely matters.
-- **Custom editor tooling** — a 23-command scene-builder suite that automates model placement,
-  collider generation, URP material rebuilding, animator construction, and navmesh setup;
-  idempotent and re-runnable.
-- **Procedural water** — runtime mesh generation with two-octave Perlin displacement, a trigger-driven
-  current, and buoyancy that handles both `CharacterController` and `Rigidbody` bodies cleanly.
-- **Runtime NavMesh baking** from physics colliders, with carving obstacles so swinging doors open
-  and close paths for the AI.
-- **Debugging under constraint** — several fixes required reasoning about Unity's frame order
-  (Animator writes land between `Update` and `LateUpdate`) and about editor-vs-build serialization
-  differences that only surfaced in shipped builds.
 
 ---
 
