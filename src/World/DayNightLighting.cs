@@ -58,8 +58,9 @@ namespace SunsetCurse.World
         [Tooltip("ON = at night the directional light becomes a moon arcing low across the sky.")]
         [SerializeField] private bool moonlight = true;
         [SerializeField] private Color moonColor = new Color(0.55f, 0.66f, 1f);
-        [Tooltip("Keep this LOW — the flashlight is meant to be your real light. 0.14 ≈ silhouettes + soft shadows.")]
-        [SerializeField] private float moonIntensity = 0.14f;
+        [Tooltip("Moonlight strength. 0.3 = you can make out paths, buildings and trees, but detail and colour " +
+                 "still need the flashlight. Lower = scarier but harder to navigate (0.14 was too dark).")]
+        [SerializeField] private float moonIntensity = 0.3f;
         [Tooltip("Moon elevation (degrees above the horizon) at moonrise/moonset.")]
         [SerializeField] private float moonMinElevation = 14f;
         [Tooltip("Moon elevation at midnight. Low = longer, creepier shadows.")]
@@ -84,12 +85,12 @@ namespace SunsetCurse.World
         [SerializeField] private Color dayAmbient = new Color(0.55f, 0.55f, 0.55f);
         // DARKENED 2026-07-08 (was 0.14/0.16/0.24): just enough deep blue to read silhouettes —
         // everything beyond the flashlight circle should feel like darkness.
-        [SerializeField] private Color nightAmbient = new Color(0.045f, 0.05f, 0.085f);
+        [SerializeField] private Color nightAmbient = new Color(0.11f, 0.12f, 0.17f);
 
         [Header("Fog (optional, helps sell the dark)")]
         [SerializeField] private bool controlFog = true;
         [SerializeField] private Color dayFog = new Color(0.7f, 0.75f, 0.8f);
-        [SerializeField] private Color nightFog = new Color(0.02f, 0.03f, 0.06f);
+        [SerializeField] private Color nightFog = new Color(0.05f, 0.06f, 0.09f);
         [Tooltip("Fog thickness (Exponential-Squared). Higher = you see less far. Thick night fog " +
                  "fades the world to black so the flashlight actually matters and night feels scary.")]
         [SerializeField] private float dayFogDensity = 0.004f;
@@ -117,13 +118,13 @@ namespace SunsetCurse.World
         [SerializeField] private float daySkyExposure = 1.1f;
         // DARKENED 2026-07-08 (was 0.09): a bright sky silhouettes the world and undermines the
         // "darkness beyond the beam" look. Faint glow kept so the horizon isn't a void.
-        [SerializeField] private float nightSkyExposure = 0.035f;
+        [SerializeField] private float nightSkyExposure = 0.08f;
 
         // ADDED 2026-10-01: the scene's reflection cubemap is captured from the DAYTIME sky, so every
         // glossy surface (wet rocks, metal, glass, the river) kept reflecting daylight at midnight.
         [Header("Environment reflections")]
         [SerializeField] private float dayReflectionIntensity = 1f;
-        [SerializeField] private float nightReflectionIntensity = 0.12f;
+        [SerializeField] private float nightReflectionIntensity = 0.2f;
 
         [Header("Night colour grade (post-processing)")]
         [Tooltip("Volume Profile faded in after dusk (weight = how dark it is). Colder, grainier, " +
