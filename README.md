@@ -2,16 +2,27 @@
 
 A four-player co-op horror survival game built in Unity 6. A traveller's car breaks down beside a
 cursed forest settlement, and the locals reveal he can never leave — unless the group gathers
-enough valuables to break the curse. Players have **seven in-game days**. Each night the sun sets
-a little less, and on day seven night becomes permanent.
+enough valuables to break the curse. Players have **seven in-game days** (shorter 2- and 4-night
+runs can be chosen from the menu). Each night the sun sets a little less, and on the last day night
+becomes permanent.
 
-**Scale:** 105 C# scripts · ~24,600 lines · single Unity 6 project
+**Scale:** 108 C# scripts · ~25,400 lines · single Unity 6 project
 
-> *Role: Solo developer - Coded with assistance of Claude code.
+> **Role:** Solo developer — coded with the assistance of Claude Code.
 
-> **This repository contains the source code only.** The full Unity project also includes licensed
-> Unity Asset Store art, audio and animation packs, which are excluded here for licensing and size
-> reasons. Every file in `src/` was written for this project.
+> **This repository contains the game's source code only.** The full Unity project also includes
+> licensed Unity Asset Store and Sketchfab art, audio and animation, which are excluded here for
+> licensing and size reasons. Every file in `src/` was written for this project.
+
+---
+
+## Screenshots
+
+![The haunted parish at dusk, in the last minutes of daylight](media/dusk-church.jpg)
+*Dusk at the haunted parish — the last minutes of daylight before the monsters wake.*
+
+![The Creep monster standing over a downed player](media/downed-by-the-creep.jpg)
+*Caught by the Creep. A downed player bleeds out on a timer unless a teammate reaches them in time.*
 
 ---
 
@@ -21,10 +32,11 @@ a little less, and on day seven night becomes permanent.
   lore pages, and plan the night's raid.
 - **Night** — the monsters leave their ground. Raid the fortified compound for one hidden Ritual
   Potion per night, and scavenge the parts needed to repair a derelict radio tower.
-- **Escape** — two independent win conditions, completable in either order: perform the altar
+- **Escape** — two objectives, both required, completable in either order: perform the altar
   **ritual** (a hold-the-line channel that broadcasts noise and draws every monster to you), and
   repair the tower to transmit an **SOS** that calls in a rescue helicopter.
-- **Pressure** — the safe daylight window shrinks every day (30 seconds less every subsequent day); miss the deadline and night is permanent.
+- **Pressure** — the safe daylight window shrinks every day (30 seconds less each day); miss the
+  deadline and night is permanent.
 
 ---
 
@@ -34,13 +46,13 @@ a little less, and on day seven night becomes permanent.
 |---|---|
 | Engine | Unity **6000.4.8f1** (Unity 6) |
 | Language | **C#** (all gameplay, networking, tooling) · ShaderLab/HLSL for water surface work |
-| Rendering | Universal Render Pipeline **17.4.0** |
+| Rendering | Universal Render Pipeline **17.4.0** (Forward+, HDR, TAA, post-processing) |
 | Multiplayer | Netcode for GameObjects **2.0.0** + Unity Relay **1.1.0** + Authentication **3.3.0** |
 | Input | Unity Input System **1.19.0** (no legacy input) |
 | AI / Pathfinding | AI Navigation **2.0.12** (NavMesh, runtime-baked) |
 | Camera | Cinemachine **3.1.6** |
 | Audio | AudioMixer bus routing (Master ▸ Music / SFX) with PlayerPrefs-backed settings |
-| Tooling | Custom Unity Editor extensions (~2,900 lines of editor-only automation) |
+| Tooling | Custom Unity Editor extensions (~3,000 lines of editor-only automation) |
 
 ---
 
@@ -63,8 +75,9 @@ peers; clients drive only their own input and movement.
   on one-shot broadcasts.
 - **Event-driven time** — a single `GameClock` owns day/night phases and fires C# events;
   ~15 consumer systems subscribe instead of polling in `Update()`.
-- **Offline parity** — every networked system falls back to a local path, so single-player runs
-  through the same code without a live session.
+- **One code path for solo and co-op** — single-player starts a local host (no Relay), so solo
+  play runs exactly the same networked code as co-op; systems also keep an offline fallback for
+  quick editor testing.
 
 ### Backend services
 Unity Gaming Services provides anonymous authentication and **Relay**-brokered connectivity —
@@ -79,12 +92,13 @@ before the gameplay scene loads.
 **Survival** — health/hunger with a lock-on-eat model, night-time starvation damage, health-scaled
 movement speed, bandages, downed-and-revive with bleed-out, spectator mode, fall recovery.
 
-**Monster AI** — two distinct hunters. A roaming **stalker** with deliberately imperfect knowledge:
-sight (radius + view cone + line-of-sight raycasts), hearing (sprinting is loud, walking is quiet,
-standing still is silent), and scent-based pursuit, moving through Wander → Hunt → Search → lose-scent
-states. A territorial **compound watcher** that hunts by sound alone inside its own zone. Plus a
-jumpscare director and a false-cue system that plays red-herring growls, so audio can never be fully
-trusted.
+**Monster AI** — two distinct hunters. A roaming **stalker** that never has perfect information:
+close-range scent, sight (radius + view cone + line-of-sight raycasts), and hearing (sprinting is
+loud, walking is quiet, standing still is silent). She drifts toward the nearest player at a walk,
+sprints only while she actually senses someone, switches targets between players who stay close
+together, and can be stunned, blinded or lured away with crafted items. A territorial **compound
+watcher** hunts by sound alone inside its own zone. Plus a jumpscare director and a false-cue
+system that plays red-herring growls, so audio can never be fully trusted.
 
 **Crafting & items** — a rebuildable crafting bench with drag-and-drop inventory: torch (blinds and
 distracts), stun syrup, throwable stone distractor, respawn potion, and a river-water bucket used as
@@ -96,8 +110,9 @@ house, downpour, restless dead), synced doors, a safe house that monsters cannot
 procedural river with real current, buoyancy, and Perlin-displaced water.
 
 **Presentation** — animated splash and menu, intro cutscene, difficulty and night-count selection,
-death/victory cinematics, world-space nameplates, proximity heartbeat/scream stings, and
-positional footstep audio.
+a moonlit night with its own colour grade (stained red under the blood-moon omen), ground mist and
+dust that only show where light falls, death/victory cinematics, world-space nameplates, proximity
+heartbeat/scream stings, and positional footstep audio.
 
 ---
 
@@ -105,9 +120,10 @@ positional footstep audio.
 
 - **Deterministic-by-seed world sync** — replaced per-object position replication with one shared
   integer, eliminating an entire class of desync bugs and the bandwidth that came with it.
-- **Imperfect-knowledge AI** — sensing built from sight cones, LOS raycasts, and a player-noise
-  model rather than direct position access, so the monster can genuinely lose you.
-- **Custom editor tooling** — a 24-command scene-builder suite that automates model placement,
+- **Layered AI senses** — a sprint has to be earned through sight cones, line-of-sight raycasts and
+  a player-noise model; between sightings the monster only closes in at a walk, so breaking line of
+  sight and going quiet genuinely matters.
+- **Custom editor tooling** — a 23-command scene-builder suite that automates model placement,
   collider generation, URP material rebuilding, animator construction, and navmesh setup;
   idempotent and re-runnable.
 - **Procedural water** — runtime mesh generation with two-octave Perlin displacement, a trigger-driven
@@ -126,14 +142,14 @@ positional footstep audio.
 src/
 ├── Core/      # game clock, shared inventory, escape tracking, omens, difficulty   (9 scripts)
 ├── Player/    # movement, stats, interaction, climbing, per-player items          (23 scripts)
-├── World/     # spawners, crafting, ritual, radio tower, river, doors, weather    (48 scripts)
+├── World/     # spawners, crafting, ritual, radio tower, river, doors, weather    (49 scripts)
 ├── AI/        # stalker, compound watcher, jumpscare director, alert bus           (5 scripts)
 ├── Net/       # relay bootstrap, lobby, session state, per-player ownership        (6 scripts)
 ├── UI/        # menus, inventory, HUD, cutscenes                                   (8 scripts)
 ├── Audio/     # mixer-routed audio manager and settings                            (4 scripts)
-└── Editor/    # scene-building and asset-pipeline automation                       (2 scripts)
+└── Editor/    # scene-building, asset-pipeline and play-mode automation            (4 scripts)
 
-media/         # screenshots and gameplay video
+media/         # screenshots
 ```
 
 ### Suggested reading order
@@ -141,7 +157,7 @@ media/         # screenshots and gameplay video
 | File | Why it's worth a look |
 |---|---|
 | `Core/GameClock.cs` | Server-authoritative time; the event backbone the whole game hangs off |
-| `AI/MonsterAI.cs` | The imperfect-knowledge stalker — sight, hearing, scent, state machine |
+| `AI/MonsterAI.cs` | The stalker — scent, sight, hearing, target switching, state machine |
 | `Core/Inventory.cs` | Shared world state: seeds, synced node consumption, drop registries |
 | `Net/NetworkBootstrap.cs` | Relay allocation, authentication, host/join flow |
 | `World/RiverFlowController.cs` | Procedural water mesh, Perlin displacement, current volume |
@@ -151,4 +167,5 @@ media/         # screenshots and gameplay video
 
 ## Credits
 
-The full game additionally uses licensed third-party art, audio and animation (Unity Asset Store packs and Mixamo animations), which are not redistributed in this repository.
+The full game additionally uses licensed third-party art, audio and animation (Unity Asset Store
+packs, Sketchfab models and Mixamo animations), which are not redistributed in this repository.
